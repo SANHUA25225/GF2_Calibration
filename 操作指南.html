@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>GF-2 辐射定标 · 操作指南</title>
+<style>
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; max-width: 860px; margin: 0 auto; padding: 32px 24px 64px; color: #2c3e50; line-height: 1.75; background: #fafbfc; }
+  h1 { font-size: 26px; border-bottom: 3px solid #2f6fed; padding-bottom: 12px; }
+  h2 { font-size: 20px; margin-top: 40px; color: #1a5fd0; border-left: 5px solid #2f6fed; padding-left: 12px; }
+  code { background: #eef2f7; border-radius: 6px; padding: 2px 6px; font-family: Consolas, monospace; font-size: 14px; }
+  pre { background: #eef2f7; border: 1px solid #d8e0ea; border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-family: Consolas, monospace; font-size: 14px; line-height: 1.6; }
+  .box { background: #fff; border: 1px solid #e3e9f0; border-radius: 10px; padding: 16px 20px; margin: 14px 0; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .num { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; background: #2f6fed; color: #fff; border-radius: 50%; font-weight: bold; margin-right: 10px; }
+  table { border-collapse: collapse; width: 100%; background: #fff; margin: 12px 0; }
+  th, td { border: 1px solid #d8e0ea; padding: 8px 12px; text-align: left; font-size: 14px; }
+  th { background: #eef4ff; }
+  .warn { background: #fff7e6; border: 1px solid #ffd591; border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+  .ok { color: #1a7f37; font-weight: bold; }
+  .dim { color: #7a8699; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>GF-2 辐射定标程序 · 操作指南</h1>
+
+<div class="box">
+  <b>这个程序做什么？</b><br>
+  把 GF-2 卫星的原始影像（DN 灰度值）换算成有物理意义的<b>辐射亮度</b>，公式为：
+  <code>Radiance = Gain × DN + Offset</code>。定标系数会<b>自动从影像配套的 XML 元数据</b>（<code>&lt;AbsCeof&gt;</code> 标签）中读取，不需要手动输入。
+  结果以 <b>BIP</b> 存储方式保存为 GeoTIFF（LZW 压缩），ENVI / ArcGIS / QGIS 都能打开。
+</div>
+
+<h2>一、文件夹里有什么</h2>
+<table>
+  <tr><th>文件</th><th>作用</th></tr>
+  <tr><td><code>运行定标.bat</code></td><td><b>双击即可运行</b>（推荐方式，自动使用 gf2obia 环境）</td></tr>
+  <tr><td><code>输入配置.txt</code></td><td><b>换影像时只改这个文件</b>（记事本打开，填 3 个路径）</td></tr>
+  <tr><td><code>gf2_radiometric_calibration_fixed.py</code></td><td>定标程序本体（Python 脚本，一般不用动）</td></tr>
+  <tr><td><code>操作指南.html</code></td><td>本说明书（双击用浏览器打开）</td></tr>
+</table>
+
+<h2>二、怎么运行</h2>
+
+<h3>方式 A：双击运行（推荐，零命令）</h3>
+<div class="box">
+  <span class="num">1</span>打开 <code>D:\GF2_Calibration</code> 文件夹<br>
+  <span class="num">2</span><b>双击 <code>运行定标.bat</code></b>，会弹出黑色命令行窗口并自动开始<br>
+  <span class="num">3</span>等待 1～3 分钟，看到 <span class="ok">[完成] 辐射定标结果已保存</span> 即成功，按任意键关闭窗口
+</div>
+
+<h3>方式 B：手动命令行（备用）</h3>
+<div class="box">
+  <span class="num">1</span>按 <code>Win</code> 键，输入 <code>Anaconda Prompt</code> 回车，打开命令行窗口<br>
+  <span class="num">2</span>输入 <code>conda activate gf2obia</code> 回车（行首出现 <code>(gf2obia)</code> 即成功）<br>
+  <span class="num">3</span>粘贴下面一行，回车：
+<pre>python "D:\GF2_Calibration\gf2_radiometric_calibration_fixed.py"</pre>
+</div>
+
+<h2>三、运行成功的标志</h2>
+<pre>XML 中解析到 Gain : [0.1374, 0.1784, 0.1723, 0.1894]
+XML 中解析到 Offset: (无, 按 0 处理)
+  影像: 7300 x 6920, 4 波段, 原始数据类型 uint16
+
+[完成] 辐射定标结果已保存: D:\gf2\GF2_MSS_Radiance_BIP.tif
+       交错方式: BIP (Band Interleaved by Pixel)</pre>
+<p>查看结果：ENVI 中 <code>File → Open As → GeoTIFF</code>，选择 <code>D:\gf2\GF2_MSS_Radiance_BIP.tif</code>。</p>
+
+<h2>四、换一景影像怎么办</h2>
+<div class="box">
+  <span class="num">1</span>右键 <code>输入配置.txt</code> → 打开方式 → <b>记事本</b><br>
+  <span class="num">2</span>把 <code>=</code> 右边改成新影像的路径（共 3 处，见下表）<br>
+  <span class="num">3</span>保存（Ctrl+S），再双击 <code>运行定标.bat</code> 即可
+</div>
+<table>
+  <tr><th>要改的行</th><th>= 右边填什么</th></tr>
+  <tr><td><code>INPUT_IMAGE</code></td><td>新影像的 <code>...-MSS1.tiff</code> 完整路径</td></tr>
+  <tr><td><code>XML_PATH</code></td><td>同目录下配套的 <code>...-MSS1.xml</code> 完整路径（<b>必须一起换</b>，否则系数不对）</td></tr>
+  <tr><td><code>OUTPUT_IMAGE</code></td><td>输出结果想存的位置和文件名</td></tr>
+</table>
+<p class="dim">提示：路径直接粘贴即可，<b>不需要加引号</b>；以 # 开头的说明行不用动。定标系数会自动从新影像的 XML 读取。</p>
+
+<h2>五、常见问题</h2>
+<table>
+  <tr><th>现象</th><th>原因与解决</th></tr>
+  <tr><td>双击 .py 文件闪退</td><td>正常现象——直接双击用的不是 conda 环境。请用 <b>运行定标.bat</b> 或方式 B。</td></tr>
+  <tr><td>[错误] 找不到输入文件</td><td>配置区 <code>INPUT_IMAGE</code> 路径写错了，检查盘符、文件名是否一致。</td></tr>
+  <tr><td>系数个数与波段数不一致</td><td>换用全色影像（1 波段）但系数是 4 波段的。全色数据请改配置区 GAINS 为 1 个值，或告诉我帮你改。</td></tr>
+  <tr><td>输出文件很大 / 打不开</td><td>输出约 0.8～1 GB（float32 + LZW），属正常；确认 D 盘剩余空间充足。</td></tr>
+  <tr><td>影像没有地理坐标</td><td>GF-2 L1A 原始数据本身不带投影，属正常。需要配准/正射时用影像自带的 .rpb 文件在 ENVI/GDAL 中处理。</td></tr>
+</table>
+
+<div class="warn">
+  <b>注意</b>：输出默认保存到 <code>D:\gf2\GF2_MSS_Radiance_BIP.tif</code>，重复运行会覆盖上次结果；想保留就先改 <code>OUTPUT_IMAGE</code> 文件名。
+</div>
+
+<p class="dim">生成日期：2026-10-20 · 环境：miniconda3 / gf2obia（rasterio 1.4.4）</p>
+
+</body>
+</html>
